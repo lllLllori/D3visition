@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script type="text/javascript" src="https://d3js.org/d3.v6.min.js"></script>
+    <title>Case 2</title>
+    <style>
+        .world {
+            transform: translate(135px, 200px);
+        }
+
+        .overlay {
+            fill: none;
+            pointer-events: all;
+        }
+    </style>
+</head>
+
+<body>
+    <script>
+        // d3.json("./数据资料/gistfile1.json")
+        d3.json("gistfile1.json").then(function (root) {
+            console.log(root);
+
+            const width = 1470;
+            const height = 760;
+
+            let projection = d3.geoMercator()
+                .center([0, 0])
+                .scale(180);
+
+            let path = d3.geoPath()
+                .projection(projection);
+
+            let svg = d3.select('body')
+                .append('svg')
+                .attr('width', width)
+                .attr('height', height);
+
+            var zooming = function (event, d) {
+                console.log(event);
+                groups.attr("transform", event.transform);
+
+            }
+
+            let zoom = d3.zoom()
+                .scaleExtent([0, 10])
+                .on("zoom", zooming)
+
+            svg.append("rect")
+                .attr("x", 0)
+                .attr("height", height)
+                .attr("width", width)
+                .style("fill", "black");
+
+            let groups = svg.append("g");
+
+            let countrys = groups.selectAll("path")
+                .data(root.features)
+                .enter()
+                .append("path")
+                .attr("d", path)
+                .attr("class", "world")
+                .style("stroke", "black")
+                .style("fill", "rgb(15,26,88)");
+
+            d3.csv("All_Starbucks_Locations_in_the_World_-_Heat_Map.csv").then(function (place) {
+                console.log(place);
+
+                let location = groups.selectAll(".location")
+                    .data(place)
+                    .enter()
+                    .append("g")
+                    .attr("class", "location")
+                    .attr("transform", function (d) {
+                        let coor = projection([d.Longitude, d.Latitude]);
+                        coor[0] += 135;
+                        coor[1] += 200;
+                        return "translate(" + coor[0] + "," + coor[1] + ")";
+                    });
+
+                location.append("circle")
+                    .attr("r", 0.4)
+                    .attr("fill", "white");
+
+                svg.append("rect")
+                    .attr("x", 0)
+                    .attr("height", height)
+                    .attr("width", width)
+                    .attr("class", "overlay")
+                    .call(zoom);
+            });
+        });
+
+
+
+
+    </script>
+</body>
+
+</html>

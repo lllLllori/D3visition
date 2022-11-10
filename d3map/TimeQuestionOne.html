@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TimeQuestionOne</title>
+    <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+    <style>
+        .area {
+            stroke: none;
+            transform: translate(120px, 10px);
+        }
+        path{
+            opacity: 0.8;
+        }
+        .btitle{
+            font-size: 30px;
+
+            text-align: center;
+            letter-spacing: 8px;
+            transform: translate(0px,400px);
+        }
+        .stitle{
+            /*为了保证标题在svg里，需要进行translate y:410*/
+            font-size: 16px;
+
+            text-align: center;
+            letter-spacing: 2px;
+            transform: translate(0px,410px);
+        }
+        .tip{
+            font-size: 16px;
+            writing-mode: tb-rl;
+            transform: translate(130px,360px);
+        }
+        .c1{
+            transform: translate(1360px,350px);
+        }
+        .c2{
+            transform: translate(1360px,440px);
+        }
+        .c3{
+            transform: translate(1360px,480px);
+        }
+        .c4{
+            transform: translate(1360px,490px);
+        }
+        .c5{
+            transform: translate(1360px,495px);
+        }
+        .c6{
+            transform: translate(1360px,496px);
+        }
+        .c7{
+            transform: translate(1360px,496px);
+        }
+        .c8{
+            transform: translate(1360px,490px);
+        }
+        .c9{
+            transform: translate(1360px,485px);
+        }
+        .c10{
+            transform: translate(1360px,480px);
+        }
+        .c11{
+            transform: translate(1360px,473px);
+        }
+        .c12{
+            transform: translate(1360px,465px);
+        }
+        .tips{
+            font-weight: 700;
+        }
+    </style>
+    
+</head>
+<body>
+    <div class="up"></div>
+    <div class="btitle">世界各国历年GDP及排名变化</div>
+    <div class="stitle">数据来源|世界银行</div>
+    <div class="tip">万亿（美元）</div>
+    <div class="c1 tips">美国</div>
+    <div class="c2 tips">中国</div>
+    <div class="c3 tips">日本</div>
+    <div class="c4 tips">德国</div>
+    <div class="c5 tips">英国</div>
+    <div class="c6 tips">法国</div>
+    <div class="c7 tips">印度</div>
+    <div class="c8 tips">意大利</div>
+    <div class="c9 tips">巴西</div>
+    <div class="c10 tips">加拿大</div>
+    <div class="c11 tips">韩国</div>
+    <div class="c12 tips">俄罗斯</div>
+    <script type="text/javascript">
+
+        //对堆叠后的标签排序，确定下点和上点
+        var sort = function (series) {
+
+            for (let j = 0; j < 58; j++) {
+                let sum = new Array();
+                for (let i = 0; i < 215; i++) {
+                    let h = series[i][j][1] - series[i][j][0];
+                    sum.push(h);
+                }
+
+                let btm = 0;
+                let top;
+                // console.log(sum);
+                for (let y = 0; y < 215; y++) {
+                    let min = sum[0];
+                    let x = 0;
+
+                    for (let k = 1; k < 215; k++) {
+                        if (sum[k] <= min) {
+                            min = sum[k];
+                            x = k;
+                        }
+                    }
+                    top = btm + min;
+                    series[x][j][0] = btm;
+                    series[x][j][1] = top;
+                    btm = top;
+                    sum[x] = 1E+15;
+                }
+            }
+        }
+
+
+        d3.csv("gdp_data_source.csv",function(error,csvdata)
+        {
+            //设置svg宽度高度
+            const width = 1360;
+            const height = 650;
+            const margin = { top: 10, right: 10, bottom: 10, left: 120 },
+                innerWidth = width - margin.left - margin.right,
+                innerHeight = height - margin.top - margin.bottom;
+
+
+            if(error) console.error(error);
+
+            //获取第一行的数据，也就是国家
+            var keys=csvdata.columns;
+            //去掉第一个数据（年），剩下的就都是国家了
+            keys.shift();
+
+            //对原始数据进行堆叠
+            var stack=d3.stack()
+                        .order(d3.stackOrderAscending)
+                        .keys(keys)
+                        .offset(d3.stackOffsetWiggle);
+
+            var stackdata=stack(csvdata);
+
+            //设置颜色
+            var color=d3.scaleOrdinal()
+                        .domain(stackdata)
+                        .range(d3.schemeCategory20c);
+
+            //对于堆叠后的数据进行排序
+            sort(stackdata);
+
+            //设置x比例尺
+            var xScale=d3.scaleLinear()
+                        .domain([1960,2017])
+                        .range([0,innerWidth]);
+            //设置x的计数规范
+            var xformat=d3.format([,]);
+
+            //设置y的比例尺和y轴的比例尺
+            var yScale=d3.scaleLinear()
+                        .domain([0, d3.max(stackdata, d => d3.max(d, sub => sub[1]))])
+                        .range([innerHeight,0]);
+
+            var yaxisscale=d3.scaleLinear()
+                    .domain([0, d3.max(stackdata, d => d3.max(d, sub => sub[1]))/1E+12])
+
+                    .range([innerHeight,0]);
+            //设置x坐标轴
+            var xaxis=d3.axisBottom()
+                        .scale(xScale)
+                        .ticks(10)
+                        .tickFormat(xformat);
+            //设置y坐标轴
+            var yaxis=d3.axisLeft()
+                        .scale(yaxisscale)
+                        .ticks(7);
+
+            //设置围成面积上下的两条线
+            var line=d3.area()
+                        .x(function (d) {return xScale(d.data.year);})
+                        .y0(function (d) {return yScale(d[0]);})
+                        .y1(function (d){return yScale(d[1]);})
+                        .curve(d3.curveCatmullRom.alpha(0.5));
+
+            //绘制svg
+            let svg = d3.select('body').append('svg')
+                .attr('width', width + margin.left + margin.right)
+                .attr('height', height + margin.top + margin.bottom);
+
+            var gropus=svg.append("g");
+
+            gropus
+                    .attr('id', 'arealine')  //代表面积部分的类
+                    .selectAll("path")
+                    .data(stackdata)
+                    .enter()
+                    .append("path")
+                    .attr("class", "area")  //代表图的区域部分
+                    .attr("d",line)
+                    .attr("fill",function (i)
+                    {
+                        return color(i);
+                    })
+                    .on("mouseover",function () //鼠标悬停时，全部变成灰色，悬停区域变成红色
+                    {
+                        d3.select("#arealine")
+                            .selectAll("path")
+                            .attr("fill","grey");
+                        d3.select(this)
+                            .attr("fill","red");
+                    })
+
+                    .on("mouseout",function ()  //鼠标离开时，恢复原来颜色
+                    {
+                        d3.select("#arealine")
+                            .selectAll("path")
+                            .attr("fill",function (i)
+                            {
+                                return color(i);
+                            });
+                    })
+
+            //绘制坐标轴部分
+            const g = svg.append('g').attr('id', 'maingroup')
+                .attr('transform', 'translate(' + margin.left + ',' + margin.top + ')');
+
+            g.append('g').call(yaxis)
+            g.append('g').call(xaxis).attr("transform", "translate(0, " + innerHeight + ")");
+
+
+            })
+    </script>
+</body>
+</html>

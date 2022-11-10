@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+    <style>
+        ul{
+            float: right;
+            margin-top: 1px;
+        }
+        li{
+            display: inline-block;
+            font-size:14px;
+        }
+
+        ul li a:visited{
+            color:black;
+            text-decoration:none;
+        }
+        ul li a:hover{
+            color:orange;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="choose">
+        <ul>
+            <span>展示状态:</span>
+            <li><a href="">无序状态</a></li><span>/</span>
+            <li><a href="">大洲</a></li><span>/</span>
+            <li><a href="">性别</a></li><span>/</span>
+            <li><a href="">年龄</a></li><span>/</span>
+            <li><a href="">读写能力</a></li><span>/</span>
+            <li><a href="">学历</a></li><span>/</span>
+            <li><a href="">网络</a></li><span>/</span>
+            <li><a href="">手机</a></li><span>/</span>
+            <li><a href="">饮用水</a></li><span>/</span>
+            <li><a href="">贫穷情况</a></li><span>/</span>
+            <li><a href="">营养状况</a></li><span>/</span>
+            <li><a href="">住房</a></li><span>/</span>
+            <li><a href="">母语</a></li><span>/</span>
+            <li><a href="">城乡</a></li>
+        </ul>
+    </div>
+
+    <script type="text/javascript">
+        d3.selectAll("li")
+            .on("mouseover",function(d)
+            {
+                d.attr("fill","orange");
+            })
+
+    </script>
+    
+</body>
+</html>
