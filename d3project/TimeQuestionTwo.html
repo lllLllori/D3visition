@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TimeQuestionTwo</title>
+</head>
+<body>
+<style>
+  text {
+    text-align: right;
+  }
+</style>
+<script src="https://d3js.org/d3.v4.js"></script>
+<script>
+
+      let w = window.innerWidth || document.documentElement.clientWidth || document.body.clientWidth;
+      let h = window.innerHeight || document.documentElement.clientHeight || document.body.clientHeight;
+      w *= 0.98;
+      h *= 0.90;
+
+      let inner = {top: 100, right: 100, bottom: 50, left: 200};
+      let H = (h - inner.bottom - inner.top) / 6 * 0.95;
+      var interval = 2000;
+      var padding=20;
+
+
+
+      var rowConverter = function(d, i, cols) {
+        var row = [];
+        //Loop once for each vehicle type
+        for (var i = 1; i < cols.length; i++) {
+          if (d[cols[i]]) {
+            var temp = Math.floor((+d[cols[i]]) / 100000000);
+            row[i - 1] = {
+              country: cols[i],
+              value: temp
+            };
+          } else { //Otherwise…
+            row[i - 1] = {
+              country: cols[i],
+              value: 0
+            };
+          }
+        }
+        row.sort((a, b) => d3.descending(a.value, b.value));
+        return row;
+      }
+
+      function deepClone(obj, newObj) {
+        var newObj = newObj || {};
+        for (key in obj) {
+          if (typeof obj[key] == 'object') {
+            newObj[key] = (obj[key].constructor === Array) ? [] : {}
+            deepClone(obj[key], newObj[key]);
+          } else {
+            newObj[key] = obj[key]
+          }
+        }
+        return newObj;
+      }
+
+    d3.csv("gdp_data_source.csv",rowConverter,function (data) {
+      var dataset = [];
+      deepClone(data, dataset)
+
+      for (var i = 0; i < dataset.length; i++) {
+        dataset[i].splice(10);
+      }
+      console.log(dataset);
+      var length = dataset.length;
+      var years = 1960;
+      var num = 0;
+      var keys = dataset.columns;
+      keys.shift();
+
+      var key = function(d) {
+        return d.country;
+      };
+
+      var color = d3.scaleOrdinal()
+              .domain(keys)
+              .range(d3.schemeCategory20c);
+
+
+      // 构造比例尺
+      var xScale = d3.scaleLinear()
+              .domain([0, d3.max(dataset[0], function(d) {
+                return d.value;
+              })])
+              .range([2 * padding, w - padding * 18]);
+
+      var yScale = d3.scaleBand()
+              .domain(d3.range(10))
+              .range([10, h])
+              .paddingInner(0.5);
+
+
+      var yAxis = d3.axisLeft()
+              .scale(yScale)
+              .tickSize(0)
+              .tickFormat(function () {
+                return null;
+              });
+
+      // 添加画布
+      var svg = d3.select("body")
+              .append("svg")
+              .attr("id", "main")
+              .attr("width", w)
+              .attr("height", h);
+
+      svg.append("g")
+              .attr("id", "danwei")
+              .append("text")
+              .attr("x", 1300)
+              .attr("y", 600)
+              .attr("font-family", "sans-serif")
+              .attr("font-size", "40px")
+              .attr("fill", "black")
+              .text("单位（亿）");
+
+      var year = svg.append("g")
+              .attr("id", "year")
+              .append("text")
+              .attr("x", 1300)
+              .attr("y", 470)
+              .attr('stroke', 'gray')
+              .attr('stroke-width', '3px')
+              .attr("opacity", "0.4")
+              .attr('fill', 'rgb(255,255, 255)')
+              .attr('font-size', 400)
+              .attr('text-anchor', 'end')
+
+      svg.append("g")
+              .attr("id", "types")
+
+      svg.append("g")
+              .attr("id", "country")
+
+      svg.append("g")
+              .attr("id", "money")
+
+      var animation = function() {
+
+        xScale.domain([0, d3.max(dataset[num], function(d) {
+          return d.value;
+        })]);
+
+        var bars = svg.select("#types")
+                .selectAll("rect")
+                .data(dataset[num], key)
+                .attr('transform', 'translate(60,0)');
+
+
+        var lables = svg.select("#country")
+                .selectAll("text")
+                .data(dataset[num], key)
+                .attr('transform', 'translate(30,0)');
+
+        var money = svg.select("#money")
+                .selectAll("text")
+                .data(dataset[num], key)
+                .attr('transform', 'translate(60,0)');
+
+        money.enter()
+                .append("text")
+                .attr("x", function(d) {
+                  return xScale(d.value) + padding * 3;
+                })
+                .attr("y", h + 30)
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "20px")
+                .attr("fill", "black")
+                .attr('transform', 'translate(60,0)')
+                .merge(money)
+                .transition()
+                .duration(interval)
+                .ease(d3.easeLinear)
+                .tween("text", function(d) {
+                  var start = 0;
+                  var end = 0;
+                  console.log(d.value);
+                  var temp = num;
+                  if (temp != 0) {
+                    for (var j = 0; j < 10; j++) {
+                      if (data[temp - 1][j].country == d.country) {
+                        console.log(data[temp - 1][j].value);
+                        start = data[temp - 1][j].value;
+                        end = data[temp][j].value;
+                        break;
+                      }
+                    }
+                  } else {
+                    start = 0;
+                    end = data[temp][j].value;
+                  }
+                  var i = d3.interpolateRound(start, end);
+                  return t => {
+                    this.textContent = i(t);
+                  };
+                })
+                .attr("x", function(d, i) {
+                  return xScale(d.value) + padding * 3;
+                })
+                .attr("y", function(d, i) {
+                  return yScale(i) + 20;
+                });
+
+        money.exit()
+                .attr("y", h + 30)
+                .remove();
+
+        lables.enter()
+                .append("text")
+                .text(function(d) {
+                  return d.country;
+                })
+                .attr("x", padding - 16)
+                .attr("y", h)
+                .attr("font-family", "sans-serif")
+                .attr("font-size", "20px")
+                .attr("fill", "black")
+                .attr("font-weight",700)
+                .attr('transform', 'translate(30,0)')
+                .merge(lables)
+                .transition()
+                .duration(interval)
+                .ease(d3.easeLinear)
+                .attr("x", function() {
+                  return padding - 16;
+                })
+                .attr("y", function(d, i) {
+                  return yScale(i) + 20;
+                });
+
+        lables.exit()
+                .transition()
+                .duration(interval)
+                .ease(d3.easeLinear)
+                .attr("y", h + 20)
+                .remove();
+
+
+        bars.enter()
+                .append("rect")
+                .attr("x", padding * 3)
+                .attr("y", h + 30)
+                .attr("height", yScale.bandwidth())
+                .attr("width", function(d) {
+                  return xScale(d.value);
+                })
+                .attr("fill", function(d) {
+                  if(d.country=='中国') return "red";
+                  else return color(d.country);
+                })
+
+                .attr('transform', 'translate(60,0)')
+                .merge(bars)
+                .transition()
+                .duration(interval)
+                .ease(d3.easeLinear)
+                .attr("x", function() {
+                  return padding * 3;
+                })
+                .attr("y", function(d, i) {
+                  return yScale(i);
+                })
+                .attr("height", yScale.bandwidth())
+                .attr("width", function(d) {
+                  return xScale(d.value);
+                })
+
+        bars.exit()
+                .transition()
+                .duration(interval)
+                .ease(d3.easeLinear)
+                .attr("y", h + 30)
+                .remove();
+        num++;
+      }
+      var trans = function() {
+        year.text(years);
+        years++;
+      }
+
+
+      var t = d3.interval(d => {
+        if (num < dataset.length) {
+          animation();
+          trans();
+        } else t.stop();
+      }, interval);
+
+      svg.append("g")
+              .attr("class", "y axis")
+              .attr("transform", "translate(" + 6 * padding + ",0)")
+              .call(yAxis);
+    })
+
+
+</script>
+</body>
+</html>

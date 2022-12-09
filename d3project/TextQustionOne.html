@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="GBK">
+    <title>TextQuestonOne</title>
+    <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="d3.layout.cloud.js"></script>
+    <style>
+        .x{
+            font-size: 18px;
+            font-family: 华文隶书;
+            font-style: italic;
+        }
+        .y{
+            font-size: 15px;
+        }
+        .c{
+            font-size: 12px;
+            font-weight: 700;
+        }
+        .ytips{
+            writing-mode: vertical-rl;
+            font-weight: 700;
+            transform: translate(100px,100px);
+        }
+    </style>
+</head>
+<body>
+    <div class="ytips">使用次数</div>
+    <script type="text/javascript">
+
+        const margin = {top: 80, right: 180, bottom: 80, left: 180}, //确定内边距
+            containerDimensions = {height: 500, width: 960}, //确定整个svg的大小
+            chartDimensions = { //根据svg的大小和内边距确定条形图的大小
+                height: containerDimensions.height - margin.top - margin.bottom,
+                width: containerDimensions.width - margin.left - margin.right
+            }
+
+
+        const svg = d3.select('body').append("svg") //获得网页中svg元素
+            .attr('width', containerDimensions.width) //设置svg的高
+            .attr('height', containerDimensions.height) //设置svg的宽
+            // .style('background', 'black') //设置背景颜色
+
+
+        const group = svg.append('g') //改变后面绘制的坐标原点
+            .attr('transform', `translate(${margin.left}, ${margin.top})`);
+
+        d3.csv("唐诗 top1000.csv",function (error,d)
+        {
+            if(error) console.error(error);
+
+            var dataset=[];
+            for(var i=3;i<23;i++)
+            {
+                dataset.push(d[i]);
+            }
+
+            console.log(dataset)
+
+            const yScale = d3.scaleLinear()
+                .domain([0, d3.max(dataset, d => d.num)])
+                .nice()//扩展定义域的两段使其都为整数，比如[1.0021, 2.999] => [1, 3]
+                .range([chartDimensions.height, 0])
+
+            const xScale = d3.scaleBand()
+                .domain(dataset.map(d => d.name))
+                .range([0, chartDimensions.width])
+                .padding(0.2)  //设置条之间的间距，通过改变每一个条的宽度来实现
+
+            var groups=svg.append("g")
+                        .attr("transform", "translate(100,100)");
+
+            groups.selectAll("rect")
+                    .data(dataset)
+                    .enter()
+                    .append("rect")
+                    .attr('x', d => xScale(d.name)+2) //设置rect的x坐标
+                    .attr('y', d => yScale(d.num))//设置rect的y坐标
+                    .attr('height', d => yScale(0) - yScale(d.num))//设置rect的width
+                    .attr('width', xScale.bandwidth())//设置rect的width, 已经被比例尺计算好了，通过x.bandwidth()获得
+                    .attr('fill', 'skyblue'); //设置颜色
+
+            groups.selectAll("text")
+                    .data(dataset)
+                    .enter()
+                    .append("text")
+                    .attr("class","c")
+                    .attr('x', d => xScale(d.name))
+                    .attr('y', d => yScale(d.num)+15)
+                    .text(function (d)
+                    {
+                        return d.num;
+                    })
+
+            var xAxis=d3.axisBottom()
+                        .scale(xScale);
+
+            var yAxis=d3.axisLeft()
+                        .scale(yScale);
+
+            var gxaxis=svg.append("g")
+                .attr("class","x axis")
+                .attr("transform", "translate(100,440)")
+                .call(xAxis);
+
+            var gyaxis=svg.append("g")
+                .attr("class","y axis")
+                .attr("transform", "translate(100,100)")
+                .call(yAxis);
+
+        })
+    </script>
+</body>
+</html>

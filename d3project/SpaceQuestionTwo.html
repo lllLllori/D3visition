@@ -1,0 +1,1432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <script type="text/javascript" src="https://d3js.org/d3.v4.min.js"></script>
+    <style>
+        ul{
+            float: right;
+            margin-top: 1px;
+        }
+        li{
+            display: inline-block;
+            font-size:14px;
+        }
+
+        p:visited{
+            color:black;
+            /*text-decoration:none;*/
+        }
+        p:hover{
+            color:orange;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="choose">
+        <ul>
+            <span>展示状态:</span>
+            <li><p class="noorder">无序状态</p></li><span>/</span>
+            <li><p class="state">大洲</p></li><span>/</span>
+            <li><p class="sex">性别</p></li><span>/</span>
+            <li><p class="age">年龄</p></li><span>/</span>
+            <li><p class="re">宗教</p></li><span>/</span>
+            <li><p class="readwrite">读写能力</p></li><span>/</span>
+            <li><p class="xl">学历</p></li><span>/</span>
+            <li><p class="website">网络</p></li><span>/</span>
+            <li><p class="phone">手机</p></li><span>/</span>
+            <li><p class="water">饮用水</p></li><span>/</span>
+            <li><p class="poor">贫穷情况</p></li><span>/</span>
+            <li><p class="neu">营养状况</p></li><span>/</span>
+            <li><p class="house">住房</p></li><span>/</span>
+            <li><p class="language">母语</p></li><span>/</span>
+            <li><p class="city">城乡</p></li>
+        </ul>
+    </div>
+
+    <script type="text/javascript">
+
+        var width = 1500
+        var height = 600
+        var C=10;
+        var padding=50;
+        var dataset=[];
+        for(var i=0;i<100;i++){
+            var newNumber1 = (Math.random()*C);
+            var newNumber2 = (Math.random()*C);
+            dataset.push([newNumber1,newNumber2]);
+        }
+        // 创建序列比例尺（将散点分布来进行比例尺的放缩）
+        var xScale = d3.scaleLinear()
+            .domain([0,C]) //序列比例尺的离散值（值域是数组）
+            .rangeRound([padding,width-padding]) // 范围
+            .nice();
+
+        // 定义比例尺
+        var yScale = d3.scaleLinear()  // 线性比例尺
+            .domain([0,C])
+            .rangeRound([padding,height-padding]) //range与rangeRound：输出值会舍入到最接近的整数值
+            .nice();  // 值域的边界值扩展到最接近的整数
+
+        var svg = d3.select("body")
+            .append("svg")
+            .attr("width",width)
+            .attr("height",height)
+
+        // group1设立svg的分组，设立rect作为背景
+        const group1 = svg.append("g")
+
+        group1.append("rect")
+            .attr("x",0)
+            .attr("y",0)
+            .attr("width",1680)
+            .attr("height",750)
+            .attr("fill","white");
+
+        // groups设立svg的分组，设立circle们作为散点
+        const groups=svg.append("g") // 设置组，将图形放入其中。 svg>>g>>图形
+
+        var circles=
+            groups.selectAll("circle")
+                .data(dataset)
+                .enter()
+                .append("circle")
+                .attr("cx",function(d) {
+                    return xScale(d[0]);
+                })
+                .attr("cy",function(d) {
+                    return yScale(d[1]);
+                })
+                .attr("fill", "rgb(233,124,50)")
+                .attr("r", 3.8);
+
+        circles
+            .transition()
+            .duration(10000*Math.random())
+            .ease(d3.easeCircle)
+            .on("start",slide);
+
+        function slide() {
+            d3.active(this) //选择当前正在进行的过渡
+                .attr("cx",xScale(Math.random()*C))
+                .attr("cy",yScale(Math.random()*C))
+                .transition()
+                .ease(d3.easeCircle)
+                .duration(20000*Math.random())
+                .on("start",slide);
+        }
+
+
+        function interrupt() {
+            circle.interrupt();
+        }
+        d3.select(".noorder")
+            .on("click",function ()
+            {
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+
+                group1.selectAll("circle")
+                    .interrupt()
+
+                circles
+                    .transition()
+                    .duration(10000*Math.random())
+                    .ease(d3.easeCircle)
+                    .on("start",slide);
+
+                function slide() {
+                    d3.active(this) //选择当前正在进行的过渡
+                        .attr("cx",xScale(Math.random()*C))
+                        .attr("cy",yScale(Math.random()*C))
+                        .transition()
+                        .ease(d3.easeCircle)
+                        .duration(10000*Math.random())
+                        .on("start",slide);
+                }
+
+            })
+        d3.select(".state")
+            .on("click",function ()
+            {
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Continent')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", 20+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", 20+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                                .text(name)
+                                .attr("x",20+j*1680/statedata.length+70)
+                                .attr('text-anchor',"middle")
+                                .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=20+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>20+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=20+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                            groups.selectAll("circle")
+                                .data(center)
+                                .transition()
+                                .duration(1000)
+                                .attr("cx",function(d) {
+                                    return d[0];
+                                })
+                                .attr("cy",function(d) {
+                                    return d[1];
+                                })
+                                .attr("fill", "rgb(233,124,50)")
+                                .attr("r", 3.8);
+
+
+
+                    }
+
+
+                })
+            })
+        d3.select(".sex")
+            .on("click",function ()
+            {
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Gender')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", 300+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", 300+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",300+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=300+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>300+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=300+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+
+
+
+                    }
+
+
+                })
+            })
+
+        d3.select(".age")
+            .on("click",function ()
+            {
+                var padding=80
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Age')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+
+
+
+                    }
+
+
+                })
+            })
+        d3.select(".re")
+            .on("click",function ()
+            {
+                var padding=180
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Religion')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1280/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1280/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1280/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1280/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1280/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1280/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+        d3.select(".readwrite")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Literacy')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+        d3.select(".xl")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='College')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+
+        d3.select(".website")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Internet')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+        d3.select(".website")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Internet')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+        d3.select(".phone")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Phones')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+        d3.select(".water")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Water')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+        d3.select(".poor")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Poverty')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+        d3.select(".neu")
+            .on("click",function ()
+            {
+                var padding=80
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Nutrition')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+        d3.select(".house")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Housing')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+        d3.select(".language")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Language (first)')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1080/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1080/statedata.length+50)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1080/statedata.length+30)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1080/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1080/statedata.length+50)
+                            {
+                                c++;
+                                cxx=padding+j1*1080/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+        d3.select(".city")
+            .on("click",function ()
+            {
+                var padding=300
+                group1.append("rect")
+                    .attr("x",0)
+                    .attr("y",0)
+                    .attr("width",1680)
+                    .attr("height",750)
+                    .attr("fill","white");
+                d3.csv("100 People.csv",function (root)
+                {
+                    var statedata=[]
+                    console.log(root)
+
+                    for(var i=0;i<root.length;i++)
+                    {
+                        if(root[i].Category=='Area')
+                        {
+                            statedata.push(root[i]);
+                        }
+                    }
+
+                    console.log(statedata)
+
+
+                    var center=[]
+                    for(var j=0;j<statedata.length;j++)
+                    {
+                        var name=statedata[j].Subcategory;
+
+                        group1.append("line")
+                            .attr("x1", padding+j*1680/statedata.length)
+                            .attr("y1", 400)
+                            .attr("x2", padding+j*1680/statedata.length+150)
+                            .attr("y2", 400)
+                            .attr("stroke", "black")
+                            .attr("stroke-width", "2px");
+
+                        group1.append("text")
+                            .text(name)
+                            .attr("x",padding+j*1680/statedata.length+70)
+                            .attr('text-anchor',"middle")
+                            .attr("y",420)
+                        var t=statedata[j].Value
+                        var j1=j
+                        console.log(t)
+                        var cxx=padding+j*1680/statedata.length-20;
+                        var cyy=380;
+                        for(var k=0;k<t;k++)
+                        {
+                            var c=0;
+
+                            cxx+=20;
+                            if(cxx>padding+j1*1680/statedata.length+150)
+                            {
+                                c++;
+                                cxx=padding+j1*1680/statedata.length
+                                j1=j
+                            }
+                            cyy-=c*10
+
+                            center.push([cxx,cyy])
+
+                        }
+                        console.log(center)
+
+
+                        groups.selectAll("circle")
+                            .data(center)
+                            .transition()
+                            .duration(1000)
+                            .attr("cx",function(d) {
+                                return d[0];
+                            })
+                            .attr("cy",function(d) {
+                                return d[1];
+                            })
+                            .attr("fill", "rgb(233,124,50)")
+                            .attr("r", 3.8);
+                    }
+                })
+            })
+
+
+    </script>
+    
+</body>
+</html>
